@@ -6,7 +6,7 @@
 'use strict';
 
 // ── Backend URL ──────────────────────────────────────────────
-const BACKEND = 'http://localhost:8080';
+const BACKEND = 'https://sortviz-pro-production.up.railway.app';
 
 // ── Constants ────────────────────────────────────────────────
 const SPEED_LABELS  = ['Very Slow','Slow','Medium','Fast','Very Fast','Instant'];
