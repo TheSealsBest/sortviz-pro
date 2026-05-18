@@ -22,10 +22,7 @@
 //  Build:  g++ -o server main.cpp -std=c++17 -pthread -O2
 //  Run:    ./server
 // ============================================================
-#define _WIN32_WINNT 0x0A00
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#include <windows.h>
+
 #include "httplib.h"
 #include "json.hpp"
 
