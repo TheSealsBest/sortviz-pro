@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SortViz — Algorithm Visualizer</title>
+  <meta name="description" content="Interactive sorting algorithm visualizer powered by a C++ backend. Visualize, race, and benchmark 6 classic sorting algorithms.">
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- ══ SITE HEADER ══════════════════════════════════════════ -->
+  <header class="site-header" role="banner">
+
+    <div class="site-logo" aria-label="SortViz">
+      <div class="logo-mark" aria-hidden="true"></div>
+      SortViz
+    </div>
+
+    <!-- Primary mode navigation -->
+    <nav aria-label="Mode">
+      <ul class="primary-nav">
+        <li>
+          <button class="nav-tab" id="tab-viz" role="tab"
+            aria-selected="true" aria-controls="panel-viz"
+            onclick="switchMode('viz')">
+            <span class="nav-pip" aria-hidden="true"></span>
+            Visualize
+          </button>
+        </li>
+        <li>
+          <button class="nav-tab" id="tab-race" role="tab"
+            aria-selected="false" aria-controls="panel-race"
+            onclick="switchMode('race')">
+            <span class="nav-pip" aria-hidden="true"></span>
+            Race Mode
+          </button>
+        </li>
+        <li>
+          <button class="nav-tab" id="tab-bench" role="tab"
+            aria-selected="false" aria-controls="panel-bench"
+            onclick="switchMode('bench')">
+            <span class="nav-pip" aria-hidden="true"></span>
+            Benchmark
+          </button>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- Header utilities -->
+    <div class="header-actions" role="toolbar" aria-label="Utilities">
+      <div class="sound-wrapper">
+        <button class="icon-btn" id="sound-btn"
+          aria-pressed="false" aria-label="Toggle sound"
+          onclick="toggleSound()">◉ Sound OFF</button>
+        <div class="vol-popup" role="group" aria-label="Volume control">
+          <div class="vol-popup-row">
+            Volume
+            <output id="vol-display" for="vol-slider">40%</output>
+          </div>
+          <input type="range" id="vol-slider"
+            min="0" max="100" value="40"
+            aria-label="Volume"
+            oninput="onVolume(this.value)">
+        </div>
+      </div>
+      <button class="icon-btn" aria-label="Keyboard shortcuts"
+        onclick="openHelp()">? Help</button>
+    </div>
+
+  </header>
+  <!-- /header -->
+
+  <!-- ══ WORKSPACE ════════════════════════════════════════════ -->
+  <div class="workspace">
+
+    <!-- ── SIDEBAR (controls) ─────────────────────────────── -->
+    <aside class="sidebar" id="sidebar" data-mode="viz" aria-label="Controls">
+
+      <!-- Algorithm selector -->
+      <section class="sidebar-section algo-section" aria-label="Algorithm">
+        <h2 class="sidebar-label">Algorithm</h2>
+        <ul class="algo-list" role="listbox" aria-label="Sorting algorithm">
+          <li role="option">
+            <button class="algo-btn" data-algo="bubble"
+              aria-pressed="true" onclick="selectAlgo(this)">
+              <span class="algo-name">Bubble</span>
+              <span class="algo-complexity">O(n²)</span>
+            </button>
+          </li>
+          <li role="option">
+            <button class="algo-btn" data-algo="selection"
+              aria-pressed="false" onclick="selectAlgo(this)">
+              <span class="algo-name">Selection</span>
+              <span class="algo-complexity">O(n²)</span>
+            </button>
+          </li>
+          <li role="option">
+            <button class="algo-btn" data-algo="insertion"
+              aria-pressed="false" onclick="selectAlgo(this)">
+              <span class="algo-name">Insertion</span>
+              <span class="algo-complexity">O(n²)</span>
+            </button>
+          </li>
+          <li role="option">
+            <button class="algo-btn" data-algo="merge"
+              aria-pressed="false" onclick="selectAlgo(this)">
+              <span class="algo-name">Merge</span>
+              <span class="algo-complexity">O(n log n)</span>
+            </button>
+          </li>
+          <li role="option">
+            <button class="algo-btn" data-algo="quick"
+              aria-pressed="false" onclick="selectAlgo(this)">
+              <span class="algo-name">Quick</span>
+              <span class="algo-complexity">O(n log n)</span>
+            </button>
+          </li>
+          <li role="option">
+            <button class="algo-btn" data-algo="heap"
+              aria-pressed="false" onclick="selectAlgo(this)">
+              <span class="algo-name">Heap</span>
+              <span class="algo-complexity">O(n log n)</span>
+            </button>
+          </li>
+        </ul>
+      </section>
+
+      <!-- Input preset -->
+      <section class="sidebar-section" aria-label="Input preset">
+        <h2 class="sidebar-label">Input Preset</h2>
+        <div class="preset-grid" role="group" aria-label="Array preset">
+          <button class="preset-btn" data-preset="random"
+            aria-pressed="true" onclick="selectPreset(this)">Random</button>
+          <button class="preset-btn" data-preset="nearly"
+            aria-pressed="false" onclick="selectPreset(this)">Nearly ✓</button>
+          <button class="preset-btn" data-preset="reversed"
+            aria-pressed="false" onclick="selectPreset(this)">Reversed</button>
+          <button class="preset-btn" data-preset="few"
+            aria-pressed="false" onclick="selectPreset(this)">Few Uniq</button>
+          <button class="preset-btn" data-preset="sorted"
+            aria-pressed="false" onclick="selectPreset(this)">Sorted</button>
+          <button class="preset-btn" data-preset="sawtooth"
+            aria-pressed="false" onclick="selectPreset(this)">Sawtooth</button>
+        </div>
+      </section>
+
+      <!-- Custom array -->
+      <section class="sidebar-section" aria-label="Custom array input">
+        <h2 class="sidebar-label">Custom Array</h2>
+        <label for="custom-input" class="sr-only">Custom array values</label>
+        <textarea id="custom-input" class="custom-textarea"
+          placeholder="e.g. 42, 7, 99, 3, 55"
+          spellcheck="false"
+          aria-describedby="custom-hint"></textarea>
+        <p id="custom-hint" class="custom-hint">3–100 integers, 1–999, comma-separated</p>
+        <button class="apply-btn" onclick="applyCustom()">Apply Custom Array</button>
+      </section>
+
+      <!-- Array size -->
+      <section class="sidebar-section" aria-label="Array size">
+        <h2 class="sidebar-label">Array Size</h2>
+        <div class="slider-group">
+          <div class="slider-row">
+            <label for="size-slider">Elements</label>
+            <output id="size-display" for="size-slider">50</output>
+          </div>
+          <input type="range" id="size-slider"
+            min="3" max="100" value="50"
+            aria-label="Array size"
+            oninput="onSizeChange(this.value)">
+        </div>
+      </section>
+
+      <!-- Speed -->
+      <section class="sidebar-section" aria-label="Animation speed">
+        <h2 class="sidebar-label">Animation Speed</h2>
+        <div class="slider-group">
+          <div class="slider-row">
+            <label for="speed-slider">Speed</label>
+            <output id="speed-display" for="speed-slider">Medium</output>
+          </div>
+          <input type="range" id="speed-slider"
+            min="1" max="6" value="3"
+            aria-label="Animation speed"
+            oninput="onSpeedChange(this.value)">
+        </div>
+      </section>
+
+      <!-- Playback controls -->
+      <section class="sidebar-section" aria-label="Playback controls">
+        <h2 class="sidebar-label">Controls</h2>
+        <div class="control-grid">
+          <button class="ctrl-btn primary span-2" id="sort-btn"
+            onclick="doSort()">▶ SORT</button>
+          <button class="ctrl-btn" id="pause-btn"
+            onclick="togglePause()" disabled>⏸ Pause</button>
+          <button class="ctrl-btn" id="stepb-btn"
+            onclick="stepBack()" disabled>← Step</button>
+          <button class="ctrl-btn" id="stepf-btn"
+            onclick="stepFwd()" disabled>Step →</button>
+          <button class="ctrl-btn" onclick="buildArray()">↻ New Array</button>
+          <button class="ctrl-btn danger" onclick="doReset()">✕ Reset</button>
+        </div>
+      </section>
+
+    </aside>
+    <!-- /sidebar -->
+
+    <!-- ── CANVAS AREA ─────────────────────────────────────── -->
+    <main class="canvas-area" id="canvas-area" role="main">
+
+      <!-- View mode tabs -->
+      <div class="view-tabs" role="tablist" aria-label="Visualization style">
+        <button class="view-tab" role="tab" aria-selected="true"
+          onclick="setView('bars')">Bars</button>
+        <button class="view-tab" role="tab" aria-selected="false"
+          onclick="setView('dots')">Scatter</button>
+        <button class="view-tab" role="tab" aria-selected="false"
+          onclick="setView('color')">Heatmap</button>
+      </div>
+
+      <!-- Canvas stage — all three canvases coexist, only one is active -->
+      <div class="canvas-stage">
+        <canvas class="sort-canvas active" id="sort-canvas"
+          aria-label="Sorting animation"></canvas>
+        <canvas class="race-canvas" id="race-canvas"
+          aria-label="Race mode — all algorithms simultaneously"></canvas>
+
+        <!-- Benchmark view is HTML, not canvas -->
+        <section class="bench-panel" id="bench-panel"
+          aria-label="Benchmark results">
+          <!-- populated by JS -->
+        </section>
+      </div>
+
+      <!-- Playback bar -->
+      <div class="playback-bar" role="group" aria-label="Playback">
+        <button class="play-btn" id="play-btn"
+          aria-label="Play or pause" onclick="onPlayBtn()">▶</button>
+        <button class="step-btn" id="pb-stepb"
+          aria-label="Step backward" onclick="stepBack()" disabled>‹</button>
+        <div class="scrubber-wrap">
+          <input type="range" id="scrubber"
+            min="0" max="0" value="0"
+            aria-label="Frame position"
+            oninput="scrubTo(+this.value)">
+          <div class="frame-meta" aria-live="polite">
+            <span id="frame-cur">frame 0</span>
+            <span id="frame-tot">/ 0</span>
+            <span id="frame-pct"></span>
+          </div>
+        </div>
+        <button class="step-btn" id="pb-stepf"
+          aria-label="Step forward" onclick="stepFwd()" disabled>›</button>
+      </div>
+
+      <!-- Colour legend -->
+      <div class="legend-strip" aria-label="Colour legend">
+        <div class="legend-item">
+          <div class="legend-swatch" style="background:#3a4a7a" aria-hidden="true"></div>
+          Unsorted
+        </div>
+        <div class="legend-item">
+          <div class="legend-swatch" style="background:var(--amber)" aria-hidden="true"></div>
+          Comparing
+        </div>
+        <div class="legend-item">
+          <div class="legend-swatch" style="background:var(--red)" aria-hidden="true"></div>
+          Swapping
+        </div>
+        <div class="legend-item">
+          <div class="legend-swatch" style="background:#fff" aria-hidden="true"></div>
+          Pivot
+        </div>
+        <div class="legend-item">
+          <div class="legend-swatch" style="background:var(--green)" aria-hidden="true"></div>
+          Sorted
+        </div>
+      </div>
+
+      <!-- Narration bar -->
+      <div class="narration-bar" id="narration" role="status" aria-live="polite">
+        Ready — select algorithm and press <span class="hl">SORT</span>,
+        or press <span class="ok">Space</span>
+      </div>
+
+    </main>
+    <!-- /canvas-area -->
+
+    <!-- ── INFO PANEL (right) ──────────────────────────────── -->
+    <aside class="info-panel" id="info-panel" aria-label="Statistics and pseudocode">
+
+      <!-- Live stats -->
+      <div class="stats-grid" id="stats-grid" role="group" aria-label="Live statistics">
+        <div class="stat-cell">
+          <div class="stat-label">Comparisons</div>
+          <div class="stat-value blue" id="s-comps" aria-live="polite">0</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-label">Swaps</div>
+          <div class="stat-value amber" id="s-swaps" aria-live="polite">0</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-label">Array Reads</div>
+          <div class="stat-value green" id="s-reads" aria-live="polite">0</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-label">Array Writes</div>
+          <div class="stat-value violet" id="s-writes" aria-live="polite">0</div>
+        </div>
+      </div>
+
+      <!-- Pseudocode panel -->
+      <section class="pseudocode-panel" id="pseudo-panel" aria-label="Pseudocode">
+        <h2 class="pseudocode-header">Pseudocode</h2>
+        <div id="pseudo-lines" role="list"></div>
+      </section>
+
+      <!-- Operations-over-time graph -->
+      <section class="ops-graph-panel" id="ops-graph-panel" aria-label="Operations over time">
+        <h2 class="ops-graph-label">
+          Operations over time
+          <output id="ops-total"></output>
+        </h2>
+        <canvas id="ops-canvas" aria-label="Operations chart"></canvas>
+      </section>
+
+      <!-- Race compare panel (shown only in race mode) -->
+      <section class="race-compare-panel" id="race-compare"
+        aria-label="Algorithm comparison">
+        <h2 class="rc-panel-label">Algorithm Comparison</h2>
+        <div id="rc-items"></div>
+      </section>
+
+      <!-- Activity log -->
+      <section class="activity-log" id="activity-log" aria-label="Activity log" aria-live="polite">
+      </section>
+
+    </aside>
+    <!-- /info-panel -->
+
+  </div>
+  <!-- /workspace -->
+
+</div>
+<!-- /app-shell -->
+
+<!-- ══ HELP MODAL ════════════════════════════════════════════ -->
+<div class="modal-backdrop" id="help-modal" role="dialog"
+  aria-modal="true" aria-labelledby="modal-title"
+  onclick="if(event.target===this)closeHelp()">
+  <div class="modal-box">
+    <h2 class="modal-title" id="modal-title">⌨ Keyboard Shortcuts</h2>
+    <table class="shortcut-table">
+      <tbody>
+        <tr><td>Space</td><td>Sort / Pause / Resume / Restart</td></tr>
+        <tr><td>← / →</td><td>Step one frame backward / forward</td></tr>
+        <tr><td>R</td><td>Generate a new random array</td></tr>
+        <tr><td>S</td><td>Toggle sound on / off</td></tr>
+        <tr><td>Esc</td><td>Reset current animation</td></tr>
+        <tr><td>H</td><td>Open this dialog</td></tr>
+      </tbody>
+    </table>
+
+    <h3 class="modal-section-title">Modes</h3>
+    <table class="shortcut-table">
+      <tbody>
+        <tr><td>Visualize</td><td>Step through one algorithm frame by frame</td></tr>
+        <tr><td>Race Mode</td><td>All 6 algorithms run in parallel C++ threads on the same array — watch them finish at different times</td></tr>
+        <tr><td>Benchmark</td><td>Sorts 1k–1M elements and returns real nanosecond timings from C++ chrono — shows how each algorithm scales</td></tr>
+      </tbody>
+    </table>
+
+    <h3 class="modal-section-title">View Styles</h3>
+    <table class="shortcut-table">
+      <tbody>
+        <tr><td>Bars</td><td>Classic bar chart — height = value</td></tr>
+        <tr><td>Scatter</td><td>Dot plot — index vs value</td></tr>
+        <tr><td>Heatmap</td><td>Full-width gradient by value</td></tr>
+      </tbody>
+    </table>
+
+    <button class="modal-close-btn" onclick="closeHelp()">Close (Esc)</button>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
