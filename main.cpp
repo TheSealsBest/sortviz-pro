@@ -738,6 +738,9 @@ int main() {
     std::cout << "    Static files → ./public/\n";
     std::cout << "  ───────────────────────────────────────\n\n";
 
-    svr.listen("0.0.0.0", 8080);
+    int port = 8080;
+    const char* env_port = std::getenv("PORT");
+    if (env_port) port = std::stoi(env_port);
+    svr.listen("0.0.0.0", port);
     return 0;
 }
